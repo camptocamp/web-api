@@ -3,6 +3,7 @@
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl).
 
 import logging
+from functools import partial
 
 from odoo import _, api, exceptions, fields, models
 
@@ -47,6 +48,14 @@ class EndpointRouteHandler(models.AbstractModel):
         compute="_compute_endpoint_hash", help="Identify the route with its main params"
     )
     csrf = fields.Boolean(default=False)
+    registry_sync = fields.Boolean(
+        help="ON: the record has been modified and registry was not notified."
+        "\nNo change will be active until this flag is set to false via proper action."
+        "\n\nOFF: record in line with the registry, nothing to do.",
+        default=False,
+        copy=False,
+    )
+
     # TODO: add flag to prevent route updates on save ->
     # should be handled by specific actions + filter in a tree view + btn on form
 
@@ -145,7 +154,7 @@ class EndpointRouteHandler(models.AbstractModel):
             rec.endpoint_hash = hash(tuple(vals.values()))
 
     def _controller_fields(self):
-        return ["route", "auth_type", "request_method"]
+        return ("route", "auth_type", "request_method")
 
     @api.depends("route")
     def _compute_route(self):
@@ -187,38 +196,6 @@ class EndpointRouteHandler(models.AbstractModel):
                     _("Request method is required for POST and PUT.")
                 )
 
-    # Handle automatic route registration
-
-    @api.model_create_multi
-    def create(self, vals_list):
-        rec = super().create(vals_list)
-        if not self._abstract and rec.active:
-            rec._register_controllers()
-        return rec
-
-    def write(self, vals):
-        res = super().write(vals)
-        self._handle_route_updates(vals)
-        return res
-
-    def _handle_route_updates(self, vals):
-        if "active" in vals:
-            if vals["active"]:
-                self._register_controllers()
-            else:
-                self._unregister_controllers()
-            return True
-        if any([x in vals for x in self._controller_fields()]):
-            self._logger.info("Route modified for %s", self.ids)
-            self._register_controllers()
-            return True
-        return False
-
-    def unlink(self):
-        if not self._abstract:
-            self._unregister_controllers()
-        return super().unlink()
-
     def _refresh_endpoint_data(self):
         """Enforce refresh of route computed fields.
 
@@ -238,9 +215,12 @@ class EndpointRouteHandler(models.AbstractModel):
             # Look explicitly for active records.
             # Pass `init` to not set the registry as updated
             # since this piece of code runs only when the model is loaded.
-            self.search([("active", "=", True)])._register_controllers(init=True)
+            domain = [("active", "=", True), ("registry_sync", "=", True)]
+            self.search(domain)._register_controllers(init=True)
 
     def _register_controllers(self, init=False, options=None):
+        if not self:
+            return
         if self._abstract:
             self._refresh_endpoint_data()
 
@@ -260,6 +240,8 @@ class EndpointRouteHandler(models.AbstractModel):
         self.env.registry.signal_changes()
 
     def _unregister_controllers(self):
+        if not self:
+            return
         if self._abstract:
             self._refresh_endpoint_data()
         keys = tuple([rec._endpoint_registry_unique_key() for rec in self])
@@ -323,3 +305,35 @@ class EndpointRouteHandler(models.AbstractModel):
             csrf=self.csrf,
         )
         return route, routing, self.endpoint_hash
+
+    def write(self, vals):
+        if any([x in vals for x in self._controller_fields() + ("active",)]):
+            # Mark as out of sync
+            vals["registry_sync"] = False
+        res = super().write(vals)
+        if vals.get("registry_sync"):
+            # NOTE: this is not done on create to allow bulk reload of the envs
+            # and avoid multiple env restarts in case of multiple edits
+            # on one or more records in a row.
+            self._add_after_commit_hook(self.ids)
+        return res
+
+    @api.model
+    def _add_after_commit_hook(self, record_ids):
+        # TODO: use `Cursor.postcommit.add`
+        self.env.cr.after(
+            "commit",
+            partial(self._handle_registry_sync, record_ids),
+        )
+
+    @api.model
+    def _handle_registry_sync(self, record_ids):
+        self._logger.info("Sync registry for %s", str(record_ids))
+        records = self.browse(record_ids).exists()
+        records.filtered(lambda x: x.active)._register_controllers()
+        records.filtered(lambda x: not x.active)._unregister_controllers()
+
+    def unlink(self):
+        if not self._abstract:
+            self._unregister_controllers()
+        return super().unlink()
