@@ -3,11 +3,8 @@
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl).
 
 import logging
-from functools import partial
 
 from odoo import _, api, exceptions, fields, models
-
-from ..registry import EndpointRegistry
 
 ENDPOINT_ROUTE_CONSUMER_MODELS = {
     # by db
@@ -17,9 +14,9 @@ ENDPOINT_ROUTE_CONSUMER_MODELS = {
 class EndpointRouteHandler(models.AbstractModel):
 
     _name = "endpoint.route.handler"
+    _inherit = "endpoint.route.sync.mixin"
     _description = "Endpoint Route handler"
 
-    active = fields.Boolean(default=True)
     name = fields.Char(required=True)
     route = fields.Char(
         required=True,
@@ -48,13 +45,6 @@ class EndpointRouteHandler(models.AbstractModel):
         compute="_compute_endpoint_hash", help="Identify the route with its main params"
     )
     csrf = fields.Boolean(default=False)
-    registry_sync = fields.Boolean(
-        help="ON: the record has been modified and registry was not notified."
-        "\nNo change will be active until this flag is set to false via proper action."
-        "\n\nOFF: record in line with the registry, nothing to do.",
-        default=False,
-        copy=False,
-    )
 
     # TODO: add flag to prevent route updates on save ->
     # should be handled by specific actions + filter in a tree view + btn on form
@@ -141,19 +131,20 @@ class EndpointRouteHandler(models.AbstractModel):
             ("application/x-www-form-urlencoded", "Form"),
         ]
 
-    @api.depends(lambda self: self._controller_fields())
+    @api.depends(lambda self: self._routing_impacting_fields())
     def _compute_endpoint_hash(self):
         # Do not use read to be able to play this on NewId records too
         # (NewId records are classified as missing in ACL check).
-        # values = self.read(self._controller_fields())
+        # values = self.read(self._routing_impacting_fields())
         values = [
-            {fname: rec[fname] for fname in self._controller_fields()} for rec in self
+            {fname: rec[fname] for fname in self._routing_impacting_fields()}
+            for rec in self
         ]
         for rec, vals in zip(self, values):
             vals.pop("id", None)
             rec.endpoint_hash = hash(tuple(vals.values()))
 
-    def _controller_fields(self):
+    def _routing_impacting_fields(self):
         return ("route", "auth_type", "request_method")
 
     @api.depends("route")
@@ -204,48 +195,21 @@ class EndpointRouteHandler(models.AbstractModel):
         self._compute_endpoint_hash()
         self._compute_route()
 
-    @property
-    def _endpoint_registry(self):
-        return EndpointRegistry.registry_for(self.env.cr)
-
-    def _register_hook(self):
-        super()._register_hook()
-        if not self._abstract:
-            self._logger.info("Register controllers")
-            # Look explicitly for active records.
-            # Pass `init` to not set the registry as updated
-            # since this piece of code runs only when the model is loaded.
-            domain = [("active", "=", True), ("registry_sync", "=", True)]
-            self.search(domain)._register_controllers(init=True)
-
     def _register_controllers(self, init=False, options=None):
-        if not self:
-            return
-        if self._abstract:
+        if self and self._abstract:
             self._refresh_endpoint_data()
-
-        rules = [rec._make_controller_rule(options=options) for rec in self]
-        self._endpoint_registry.update_rules(rules, init=init)
-        if not init:
-            # When envs are already loaded we must signal changes
-            self._force_routing_map_refresh()
-        self._logger.debug(
-            "Registered controllers: %s", ", ".join(self.mapped("route"))
-        )
-
-    def _force_routing_map_refresh(self):
-        """Signal changes to make all routing maps refresh."""
-        self.env["ir.http"]._clear_routing_map()
-        self.env.registry.registry_invalidated = True
-        self.env.registry.signal_changes()
+        super()._register_controllers(init=init, options=options)
 
     def _unregister_controllers(self):
-        if not self:
-            return
-        if self._abstract:
+        if self and self._abstract:
             self._refresh_endpoint_data()
-        keys = tuple([rec._endpoint_registry_unique_key() for rec in self])
-        self._endpoint_registry.drop_rules(keys)
+        super()._unregister_controllers()
+
+    def _prepare_endpoint_rules(self, options=None):
+        return [rec._make_controller_rule(options=options) for rec in self]
+
+    def _registered_endpoint_rule_keys(self):
+        return tuple([rec._endpoint_registry_unique_key() for rec in self])
 
     def _endpoint_registry_unique_key(self):
         return "{0._name}:{0.id}".format(self)
@@ -305,35 +269,3 @@ class EndpointRouteHandler(models.AbstractModel):
             csrf=self.csrf,
         )
         return route, routing, self.endpoint_hash
-
-    def write(self, vals):
-        if any([x in vals for x in self._controller_fields() + ("active",)]):
-            # Mark as out of sync
-            vals["registry_sync"] = False
-        res = super().write(vals)
-        if vals.get("registry_sync"):
-            # NOTE: this is not done on create to allow bulk reload of the envs
-            # and avoid multiple env restarts in case of multiple edits
-            # on one or more records in a row.
-            self._add_after_commit_hook(self.ids)
-        return res
-
-    @api.model
-    def _add_after_commit_hook(self, record_ids):
-        # TODO: use `Cursor.postcommit.add`
-        self.env.cr.after(
-            "commit",
-            partial(self._handle_registry_sync, record_ids),
-        )
-
-    @api.model
-    def _handle_registry_sync(self, record_ids):
-        self._logger.info("Sync registry for %s", str(record_ids))
-        records = self.browse(record_ids).exists()
-        records.filtered(lambda x: x.active)._register_controllers()
-        records.filtered(lambda x: not x.active)._unregister_controllers()
-
-    def unlink(self):
-        if not self._abstract:
-            self._unregister_controllers()
-        return super().unlink()
