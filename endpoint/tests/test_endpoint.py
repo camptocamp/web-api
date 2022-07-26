@@ -46,7 +46,7 @@ class TestEndpoint(CommonEndpoint):
                 }
             )
         with self.assertRaisesRegex(
-            exceptions.UserError, r"Request method is required for"
+            exceptions.UserError, r"Request content type is required for POST and PUT."
         ):
             self.env["endpoint.endpoint"].create(
                 {
@@ -59,7 +59,7 @@ class TestEndpoint(CommonEndpoint):
                 }
             )
         with self.assertRaisesRegex(
-            exceptions.UserError, r"Request method is required for"
+            exceptions.UserError, r"Request content type is required for POST and PUT."
         ):
             self.endpoint.request_method = "POST"
 
@@ -173,7 +173,7 @@ class TestEndpoint(CommonEndpoint):
                 "exec_as_user_id": self.env.user.id,
             }
         )
-        endpoint._handle_registry_sync(endpoint.ids)
+        endpoint._handle_registry_sync()
         key = endpoint._endpoint_registry_unique_key()
         reg = endpoint._endpoint_registry
         self.assertEqual(reg._get_rule(key).route, "/delete/this")
@@ -191,13 +191,13 @@ class TestEndpoint(CommonEndpoint):
                 "exec_as_user_id": self.env.user.id,
             }
         )
-        endpoint._handle_registry_sync(endpoint.ids)
+        endpoint._handle_registry_sync()
         self.assertTrue(endpoint.active)
         key = endpoint._endpoint_registry_unique_key()
         reg = endpoint._endpoint_registry
         self.assertEqual(reg._get_rule(key).route, "/enable-disable/this")
         endpoint.active = False
-        endpoint._handle_registry_sync(endpoint.ids)
+        endpoint._handle_registry_sync()
         self.assertEqual(reg._get_rule(key), None)
 
     def test_registry_sync(self):
