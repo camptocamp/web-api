@@ -14,9 +14,9 @@
     "data": [
         "security/ir.model.access.csv",
         "views/endpoint_view.xml",
-        "data/server_action.xml",
     ],
     "demo": [
         "demo/endpoint_demo.xml",
     ],
+    "post_init_hook": "post_init_hook",
 }
