@@ -61,7 +61,7 @@ class BaseRestRequestsAdapter(Component):
 
     def _get_auth(self, auth=False, **kwargs):
         if auth:
-            return auth
+            return {"auth": auth}
         handler = getattr(self, "_get_auth_for_" + self.collection.auth_type, None)
         return handler(**kwargs) if handler else None
 
