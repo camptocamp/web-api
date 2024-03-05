@@ -41,11 +41,27 @@ class IrHttp(models.AbstractModel):
 
     @classmethod
     def routing_map(cls, key=None):
+        # When the request cursor is used to instantiate the EndpointRegistry
+        # in the call to routing_map, the READ REPEATABLE isolation level
+        # will ensure that any value read from the DB afterwards, will be the
+        # same than when the first SELECT is executed.
+        #
+        # This is breaking the oauth flow as the oauth token that is written
+        # at the beggining of the oauth process cannot be read by the cursor
+        # computing the session token, which will read an old value. Therefore
+        # when the session security check is performed, the session token
+        # is outdated as the new session token is computed using an up to date
+        # cursor.
+        #
+        # By using a dedicated cursor to instantiate the EndpointRegistry, we
+        # ensure no read is performed on the database using the request cursor
+        # which will in turn use the updated value of the oauth token to compute
+        # the session token, and the security check will not fail.
         registry = registry_get(http.request.env.cr.dbname)
         with registry.cursor() as cr:
             last_version = cls._get_routing_map_last_version(cr)
             if not hasattr(cls, "_routing_map"):
-                _logger.info(
+                _logger.debug(
                     "routing map just initialized, store last update for this env"
                 )
                 # routing map just initialized, store last update for this env
