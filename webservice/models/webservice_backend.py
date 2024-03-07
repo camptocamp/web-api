@@ -21,6 +21,7 @@ class WebserviceBackend(models.Model):
             ("none", "Public"),
             ("user_pwd", "Username & password"),
             ("api_key", "API Key"),
+            ("oauth2", "OAuth2 Backend Application Flow (Client Credentials Grant)"),
         ],
         default="user_pwd",
         required=True,
@@ -29,6 +30,13 @@ class WebserviceBackend(models.Model):
     password = fields.Char(auth_type="user_pwd")
     api_key = fields.Char(string="API Key", auth_type="api_key")
     api_key_header = fields.Char(string="API Key header", auth_type="api_key")
+    oauth2_clientid = fields.Char(string="Client ID", auth_type="oauth2")
+    oauth2_client_secret = fields.Char(string="Client Secret", auth_type="oauth2")
+    oauth2_token_url = fields.Char(string="Token URL", auth_type="oauth2")
+    oauth2_audience = fields.Char(
+        string="Audience"
+        # no auth_type because not required
+    )
     content_type = fields.Selection(
         [
             ("application/json", "JSON"),
@@ -93,6 +101,10 @@ class WebserviceBackend(models.Model):
             "api_key": {},
             "api_key_header": {},
             "content_type": {},
+            "oauth2_clientid": {"no_default_field": True},
+            "oauth2_client_secret": {"no_default_field": True},
+            "oauth2_token_url": {"no_default_field": True},
+            "oauth2_audience": {},
         }
         webservice_fields.update(base_fields)
         return webservice_fields
