@@ -2,26 +2,49 @@
 # Copyright 2022 Camptocamp SA
 # @author Simone Orsi <simahawk@gmail.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+import datetime
 
 import requests
-from oauthlib.oauth2 import BackendApplicationClient
+from oauthlib.oauth2 import BackendApplicationClient, TokenExpiredError
 from requests_oauthlib import OAuth2Session
 
 from odoo.addons.component.core import Component
 
 
-def build_session_oauth2(token_url, client_id, client_secret, audience=None):
-    """helper function get an authenticated OAuth2Session"""
-    client = BackendApplicationClient(client_id=client_id)
-    oauth = OAuth2Session(client=client)
-    # TODO: handle token renewal
-    oauth.fetch_token(
-        token_url=token_url,
-        client_id=client_id,
-        client_secret=client_secret,
-        audience=audience,
-    )
-    return oauth
+class Oauth2SessionFactory:
+    def __init__(self, token_valid_seconds=3600 * 10):
+        self.token_valid_seconds = token_valid_seconds
+        self.session_cache = {}
+
+    def __call__(
+        self, token_url, client_id, client_secret, audience=None, force_new=False
+    ):
+        key = (token_url, client_id, client_secret, audience)
+        now = datetime.datetime.now()
+        session, expiration = self.session_cache.get(key, (None, None))
+        if session is not None and expiration < now and not force_new:
+            return session
+        session = self._new_session(token_url, client_id, client_secret, audience)
+        expiration = now + datetime.timedelta(seconds=self.token_valid_seconds)
+        self.session_cache[key] = (session, expiration)
+        return session
+
+    def _new_session(self, token_url, client_id, client_secret, audience=None):
+        """helper function get an authenticated OAuth2Session"""
+        client = BackendApplicationClient(client_id=client_id)
+        oauth = OAuth2Session(client=client)
+        # TODO: handle token renewal
+        oauth.fetch_token(
+            token_url=token_url,
+            client_id=client_id,
+            client_secret=client_secret,
+            audience=audience,
+        )
+        return oauth
+
+
+# we keep the sessions in the memory of the worker
+build_session_oauth2 = Oauth2SessionFactory()
 
 
 class BaseRestRequestsAdapter(Component):
@@ -46,9 +69,15 @@ class BaseRestRequestsAdapter(Component):
         )
         with Session(**session_kwargs) as session:
             # pylint: disable=E8106
-            resp = session.request(method, url, **new_kwargs)
-            resp.raise_for_status()
-            return resp.content
+            try:
+                resp = session.request(method, url, **new_kwargs)
+                resp.raise_for_status()
+                return resp.content
+            except TokenExpiredError:
+                session = Session(force_new=True, **session_kwargs)
+                resp = session.request(method, url, **new_kwargs)
+                resp.raise_for_status()
+                return resp.content
 
     def get(self, **kwargs):
         return self._request("get", **kwargs)
