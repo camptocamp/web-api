@@ -68,7 +68,7 @@ class BaseRestRequestsAdapter(Component):
             url = self.collection.url
         elif not url.startswith(self.collection.url):
             if not url.startswith("http"):
-                url = self.collection.url + url
+                url = f"{self.collection.url.rstrip('/')/{url.lstrip('/')"
             else:
                 # TODO: if url is given, we should validate the domain
                 # to avoid abusing a webservice backend for different calls.
