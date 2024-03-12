@@ -1,6 +1,5 @@
 # Copyright 2020 Creu Blanca
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-
 from odoo.tests.common import tagged
 
 from odoo.addons.component.tests.common import TransactionComponentCase
@@ -11,7 +10,10 @@ class CommonWebService(TransactionComponentCase):
     @classmethod
     def _setup_context(cls):
         return dict(
-            cls.env.context, tracking_disable=True, test_queue_job_no_delay=True
+            cls.env.context,
+            tracking_disable=True,
+            test_queue_job_no_delay=True,
+            test_mode=True,
         )
 
     @classmethod
