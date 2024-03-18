@@ -13,7 +13,7 @@ class CommonWebService(TransactionComponentCase):
             cls.env.context,
             tracking_disable=True,
             test_queue_job_no_delay=True,
-            test_mode=True,
+            no_new_cursor_for_token=True,
         )
 
     @classmethod

@@ -6,6 +6,7 @@
 import json
 import time
 
+import psycopg2
 import requests
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
@@ -87,11 +88,10 @@ class OAuth2RestRequestsAdapter(Component):
         # cached value to avoid hitting the database each time we need the token
         self._token = {}
 
-    def fetch_token(self):
-        pass
-
     def _is_token_valid(self, token):
-        """We consider that a token in valid if it has at least 10% of
+        """Validate given oauth2 token.
+
+        We consider that a token in valid if it has at least 10% of
         its valid duration. So if a token has a validity of 1h, we will
         renew it if we try to use it 6 minutes before its expiration date.
         """
@@ -110,37 +110,36 @@ class OAuth2RestRequestsAdapter(Component):
         if self._is_token_valid(self._token):
             return self._token
         backend = self.collection
-        with backend.env.registry.cursor() as cr:
-            if backend.env.context.get("test_mode"):
-                token_str = backend.oauth2_token or "{}"
-            else:
-                cr.execute(
-                    "SELECT oauth2_token FROM webservice_backend "
-                    "WHERE id=%s "
-                    "FOR NO KEY UPDATE",  # prevent concurrent token fetching
-                    (backend.id,),
-                )
-                token_str = cr.fetchone()[0] or "{}"
+        new_cursor = not self.env.context.get("no_new_cursor_for_token")
+        if new_cursor:
+            cr = backend.env.cursor()
+        else:
+            cr = self.env.cr
+        try:
+            cr.execute(
+                "SELECT oauth2_token FROM webservice_backend "
+                "WHERE id=%s "
+                "FOR NO KEY UPDATE",  # prevent concurrent token fetching
+                (backend.id,),
+            )
+            token_str = cr.fetchone()[0] or "{}"
             token = json.loads(token_str)
             if self._is_token_valid(token):
                 self._token = token
-                return token
             else:
                 new_token = self._fetch_new_token(old_token=token)
-                if backend.env.context.get("test_mode"):
-                    # in test mode we don't want the context manager to
-                    # commit the change -> use the normal object and let
-                    # the rollback from the test case work
-                    backend.oauth2_token = new_token
-                else:
-                    cr.execute(
-                        "UPDATE webservice_backend "
-                        "SET oauth2_token=%s "
-                        "WHERE id=%s",
-                        (json.dumps(new_token), backend.id),
-                    )
+                cr.execute(
+                    "UPDATE webservice_backend " "SET oauth2_token=%s " "WHERE id=%s",
+                    (json.dumps(new_token), backend.id),
+                )
                 self._token = new_token
-                return new_token
+            if new_cursor:
+                new_cursor.commit()
+        except psycopg2.Error:
+            if new_cursor:
+                new_cursor.rollback()
+            raise
+        return self._token
 
     def _fetch_new_token(self, old_token):
         # TODO: check if the old token has a refresh_token that can

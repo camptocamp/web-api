@@ -1,5 +1,5 @@
 # Copyright 2020 Creu Blanca
-# Copyright 2022-2024 Camptocamp SA
+# Copyright 2022 Camptocamp SA
 # @author Simone Orsi <simahawk@gmail.com>
 # @author Alexandre Fayolle <alexandre.fayolle@camptocamp.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
