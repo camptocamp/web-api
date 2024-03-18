@@ -1,12 +1,13 @@
 # Copyright 2023 Camptocamp SA
 # @author Alexandre Fayolle <alexandre.fayolle@camptocamp.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+import json
 import os
 import time
 
 import responses
 
-from .common import CommonWebService
+from .common import CommonWebService, mock_cursor
 
 
 class TestWebService(CommonWebService):
@@ -60,6 +61,41 @@ class TestWebService(CommonWebService):
             },
         )
         responses.add(responses.GET, f"{self.url}endpoint", body="OK")
-        result = self.webservice.call("get", url=f"{self.url}endpoint")
+
+        with mock_cursor(self.env.cr):
+            result = self.webservice.call("get", url=f"{self.url}endpoint")
+        self.webservice.refresh()
+        self.assertTrue("cool_token" in self.webservice.oauth2_token)
+        self.assertEqual(result, b"OK")
+
+    @responses.activate
+    def test_update_token(self):
+        duration = 3600
+        self.webservice.oauth2_token = json.dumps(
+            {
+                "access_token": "old_token",
+                "expires_at": time.time() + 10,  # in the near future
+                "expires_in": duration,
+                "token_type": "Bearer",
+            }
+        )
+        self.webservice.flush_model()
+
+        expires_timestamp = time.time() + duration
+        responses.add(
+            responses.POST,
+            f"{self.url}oauth2/token",
+            json={
+                "access_token": "cool_token",
+                "expires_at": expires_timestamp,
+                "expires_in": duration,
+                "token_type": "Bearer",
+            },
+        )
+        responses.add(responses.GET, f"{self.url}endpoint", body="OK")
+
+        with mock_cursor(self.env.cr):
+            result = self.webservice.call("get", url=f"{self.url}endpoint")
+        self.webservice.refresh()
         self.assertTrue("cool_token" in self.webservice.oauth2_token)
         self.assertEqual(result, b"OK")
