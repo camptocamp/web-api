@@ -25,7 +25,7 @@ class WebserviceBackend(models.Model):
             ("none", "Public"),
             ("user_pwd", "Username & password"),
             ("api_key", "API Key"),
-            ("oauth2", "OAuth2 Backend Application Flow (Client Credentials Grant)"),
+            ("oauth2", "OAuth2"),
         ],
         required=True,
     )
@@ -131,11 +131,11 @@ class WebserviceBackend(models.Model):
     def _compute_redirect_url(self):
         get_param = self.env["ir.config_parameter"].sudo().get_param
         base_url = get_param("web.base.url")
+        if not base_url.startswith("https://"):
+            base_url = f"https://{base_url}"
         for rec in self:
             if rec.auth_type == "oauth2" and rec.oauth2_flow == "web_application":
-                rec.redirect_url = (
-                    f"https://{base_url}/webservice/{rec.id}/oauth2/redirect"
-                )
+                rec.redirect_url = f"{base_url}/webservice/{rec.id}/oauth2/redirect"
             else:
                 rec.redirect_url = False
 
