@@ -11,7 +11,7 @@ from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 from .common import CommonWebService, mock_cursor
 
 
-class TestWebService(CommonWebService):
+class TestWebServiceOauth2BackendApplication(CommonWebService):
     @classmethod
     def _setup_records(cls):
 
@@ -137,3 +137,45 @@ class TestWebService(CommonWebService):
 
         self.webservice.invalidate_recordset()
         self.assertTrue("old_token" in self.webservice.oauth2_token)
+
+
+class TestWebServiceOauth2WebApplication(TestWebServiceOauth2BackendApplication):
+    @classmethod
+    def _setup_records(cls):
+
+        res = super()._setup_records()
+        cls.url = "https://localhost.demo.odoo/"
+        os.environ["SERVER_ENV_CONFIG"] = "\n".join(
+            [
+                "[webservice_backend.test_oauth2]",
+                "auth_type = oauth2",
+                "oauth2_flow = web_application",
+                "oauth2_clientid = some_client_id",
+                "oauth2_client_secret = shh_secret",
+                f"oauth2_token_url = {cls.url}oauth2/token",
+                f"oauth2_audience = {cls.url}",
+            ]
+        )
+        cls.webservice = cls.env["webservice.backend"].create(
+            {
+                "name": "WebService OAuth2",
+                "tech_name": "test_oauth2",
+                "auth_type": "oauth2",
+                "protocol": "http",
+                "url": cls.url,
+                "oauth2_flow": "web_application",
+                "content_type": "application/xml",
+                "oauth2_clientid": "some_client_id",
+                "oauth2_client_secret": "shh_secret",
+                "oauth2_token_url": f"{cls.url}oauth2/token",
+                "oauth2_audience": cls.url,
+            }
+        )
+        return res
+
+    def test_get_adapter_protocol(self):
+        protocol = self.webservice._get_adapter_protocol()
+        self.assertEqual(protocol, "http+oauth2-web_application")
+
+    def test_authorization_code(self):
+        pass

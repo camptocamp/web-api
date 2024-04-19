@@ -36,7 +36,7 @@ class WebserviceBackend(models.Model):
     oauth2_flow = fields.Selection(
         [
             ("backend_application", "Backend Application (Client Credentials Grant)"),
-            ("authorization_code", "Web Application (Authorization Code Grant)"),
+            ("web_application", "Web Application (Authorization Code Grant)"),
         ],
         readonly=False,
         store=True,
@@ -132,7 +132,7 @@ class WebserviceBackend(models.Model):
         get_param = self.env["ir.config_parameter"].sudo().get_param
         base_url = get_param("web.base.url")
         for rec in self:
-            if rec.auth_type == "oauth2" and rec.oauth2_flow == "authorization_code":
+            if rec.auth_type == "oauth2" and rec.oauth2_flow == "web_application":
                 rec.redirect_url = (
                     f"https://{base_url}/webservice/{rec.id}/oauth2/redirect"
                 )

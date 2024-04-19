@@ -22,7 +22,7 @@ class OAuth2Controller(http.Controller):
     )
     def redirect(self, backend_id, **params):
         backend = request.env["webservice.backend"].browse(backend_id).sudo()
-        if backend.auth_type != "oauth2" or backend.oauth2_flow != "authorization_code":
+        if backend.auth_type != "oauth2" or backend.oauth2_flow != "web_application":
             _logger.error("unexpected backed config for backend %d", backend_id)
             raise errors.MismatchingRedirectURIError()
         expected_state = backend.oauth2_state
@@ -33,7 +33,7 @@ class OAuth2Controller(http.Controller):
         code = params.get("code")
         adapter = (
             backend._get_adapter()
-        )  # we expect an adapter that support authorization_code
+        )  # we expect an adapter that supports web_application
         token = adapter._fetch_token_from_authorization(code)
         backend.write(
             {

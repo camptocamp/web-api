@@ -170,7 +170,7 @@ class BackendApplicationOAuth2RestRequestsAdapter(Component):
 
 class WebApplicationOAuth2RestRequestsAdapter(Component):
     _name = "oauth2.requests.web.application"
-    _webservice_protocol = "http+oauth2-authorization_code"
+    _webservice_protocol = "http+oauth2-web_application"
     _inherit = "oauth2.requests.backend.application"
 
     def get_client(self, oauth_params: dict):
