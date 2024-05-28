@@ -193,7 +193,10 @@ class EndpointMixin(models.AbstractModel):
         try:
             res = handler(request)
         except self._bad_request_exceptions() as orig_exec:
-            self._logger.error("_validate_request: BadRequest")
+            # Log the error w/ specific exception (eg: failure in the snippt)
+            # but do not return it w/ the request exception
+            # to avoid exposing too much info.
+            self._logger.exception("_validate_request: BadRequest")
             raise werkzeug.exceptions.BadRequest() from orig_exec
         return res
 
