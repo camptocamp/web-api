@@ -3,12 +3,12 @@
 
 {
     "name": "Endpoint JSONifier",
-    "summary": "JSON-ify endpoints responses",
+    "summary": "Allow to configure jsonifier parsers on endpoints",
     "version": "14.0.1.0.0",
     "category": "Uncategorized",
     "website": "https://github.com/OCA/web-api",
     "author": "Camptocamp, Odoo Community Association (OCA)",
-    "maintainers": ["SilvioC2C"],
+    "maintainers": ["SilvioC2C", "simahawk"],
     "license": "LGPL-3",
     "installable": True,
     "depends": ["endpoint", "jsonifier"],
