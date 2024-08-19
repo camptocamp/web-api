@@ -122,7 +122,7 @@ class WebserviceBackend(models.Model):
 
     @api.onchange("auth_type")
     def _onchange_oauth2_auth_type(self):
-        # reset the auth2_flow when auth_type is not oaut2
+        # reset the oauth2_flow when auth_type is not oauth2
         # using a compute method interfers with the server environment mixin
         for rec in self:
             if rec.auth_type != "oauth2":
