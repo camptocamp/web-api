@@ -4,16 +4,16 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 import json
-import logging
 import time
 
 import requests
-from oauthlib.oauth2 import BackendApplicationClient, WebApplicationClient
+import urllib3
+from oauthlib.oauth2 import BackendApplicationClient, WebApplicationClient, rfc6749
 from requests_oauthlib import OAuth2Session
 
-from odoo.addons.component.core import Component
+from odoo.tools.safe_eval import safe_eval
 
-_logger = logging.getLogger(__name__)
+from odoo.addons.component.core import Component
 
 
 class BaseRestRequestsAdapter(Component):
@@ -133,17 +133,32 @@ class BackendApplicationOAuth2RestRequestsAdapter(Component):
             if self._is_token_valid(token):
                 self._token = token
             else:
-                new_token = self._fetch_new_token(old_token=token)
+                new_token = {}
+                if backend.oauth2_use_refresh_token:
+                    # pylint: disable=except-pass
+                    try:
+                        new_token = self._fetch_refresh_token(old_token=token)
+                    except self._get_refresh_token_ignorable_exceptions():
+                        pass  # Do nothing and let Odoo try to fetch a new token
+                if not new_token:
+                    new_token = self._fetch_new_token(old_token=token)
+                json_token = json.dumps(new_token)
                 cr.execute(
-                    "UPDATE webservice_backend " "SET oauth2_token=%s " "WHERE id=%s",
-                    (json.dumps(new_token), backend.id),
+                    "UPDATE webservice_backend SET oauth2_token = %s WHERE id = %s",
+                    (json_token, backend.id),
                 )
+                backend._compute_oauth2_token_expiration_datetime()
                 self._token = new_token
         return self._token
 
+    def _get_refresh_token_ignorable_exceptions(self):
+        return (
+            rfc6749.errors.OAuth2Error,
+            requests.exceptions.RequestException,
+            urllib3.exceptions.HTTPError,
+        )
+
     def _fetch_new_token(self, old_token):
-        # TODO: check if the old token has a refresh_token that can
-        # be used (and use it in that case)
         oauth_params = self.collection.sudo().read(
             [
                 "oauth2_clientid",
@@ -162,6 +177,25 @@ class BackendApplicationOAuth2RestRequestsAdapter(Component):
                 audience=oauth_params.get("oauth2_audience") or "",
             )
         return token
+
+    def _fetch_refresh_token(self, old_token):
+        backend = self.collection.sudo()
+        with OAuth2Session(client_id=backend.oauth2_clientid) as session:
+            # NB: the following section partially mimics ``OAuth2Session.request()``,
+            # but allows more flexibility to make this work with different providers
+            session.token = {}
+            res = session.request(
+                **safe_eval(
+                    backend.oauth2_refresh_token_params.strip(),
+                    {"webservice": backend, "adapter": self, "old_token": old_token},
+                )
+            )
+            for hook in session.compliance_hook["access_token_response"]:
+                res = hook(res)
+            client = session._client
+            client.parse_request_body_response(res.text, scope=session.scope)
+            session.token = client.token
+            return session.token
 
     def _request(self, method, url=None, url_params=None, **kwargs):
         url = self._get_url(url=url, url_params=url_params)
