@@ -15,7 +15,6 @@ from odoo.addons.rpc_helper.decorator import disable_rpc
 
 @disable_rpc()  # Block ALL RPC calls
 class EndpointMixin(models.AbstractModel):
-
     _name = "endpoint.mixin"
     _inherit = "endpoint.route.handler"
     _description = "Endpoint mixin"
@@ -119,7 +118,7 @@ class EndpointMixin(models.AbstractModel):
                 INSERT INTO ir_logging
                 (create_date, create_uid, type, dbname, name, level, message, path, line, func)
                 VALUES (NOW() at time zone 'UTC', %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """,
+                """,
                 (
                     self.env.uid,
                     "server",
