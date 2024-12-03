@@ -116,8 +116,30 @@ class EndpointMixin(models.AbstractModel):
             cr.execute(
                 """
                 INSERT INTO ir_logging
-                (create_date, create_uid, type, dbname, name, level, message, path, line, func)
-                VALUES (NOW() at time zone 'UTC', %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                (
+                    create_date,
+                    create_uid,
+                    type,
+                    dbname,
+                    name,
+                    level,
+                    message,
+                    path,
+                    line,
+                    func
+                )
+                VALUES (
+                    NOW() at time zone 'UTC',
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s
+                )
                 """,
                 (
                     self.env.uid,
@@ -156,8 +178,9 @@ class EndpointMixin(models.AbstractModel):
         )
 
     def _default_endpoint_options_handler(self):
+        kdp = "odoo.addons.endpoint.controllers.main.EndpointController"
         return {
-            "klass_dotted_path": "odoo.addons.endpoint.controllers.main.EndpointController",
+            "klass_dotted_path": kdp,
             "method_name": "auto_endpoint",
             "default_pargs": (self._name, self.route),
         }
@@ -206,10 +229,9 @@ class EndpointMixin(models.AbstractModel):
         return [("route", "=", endpoint_route)]
 
     def copy_data(self, default=None):
-        result = super().copy_data(default=default)
-        # `route` cannot be copied as it must me unique.
+        # OVERRIDE: ``route`` cannot be copied as it must me unique.
         # Yet, we want to be able to duplicate a record from the UI.
-        for rec, data in zip(self, result):
-            if not data.get("route"):
-                data["route"] = f"{rec.route}/COPY_FIXME"
-        return result
+        self.ensure_one()
+        default = dict(default or {})
+        default.setdefault("route", f"{self.route}/COPY_FIXME")
+        return super().copy_data(default=default)
