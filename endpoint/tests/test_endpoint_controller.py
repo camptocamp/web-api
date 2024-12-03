@@ -19,7 +19,8 @@ class EndpointHttpCase(HttpCase):
         cls.env["endpoint.endpoint"].search([])._handle_registry_sync()
 
     def tearDown(self):
-        self.env["ir.http"]._clear_routing_map()
+        # Clear cache for method ``ir.http.routing_map()``
+        self.env.registry.clear_cache("routing")
         super().tearDown()
 
     def test_call1(self):
