@@ -16,13 +16,13 @@
                     name="web_ribbon"
                     title="Archived"
                     bg_color="bg-warning"
-                    attrs="{'invisible': [('active', '=', True)]}"
+                    invisible="active"
                 />
                 <sheet>
                     <div
                         class="alert alert-warning"
                         role="alert"
-                        attrs="{'invisible': ['|', ('registry_sync', '=', True), ('id', '=', False)]}"
+                        invisible="registry_sync or not id"
                     >
                         <p>
                             Registry out of sync. Likely the record has been modified but not sync'ed with the routing registry.
@@ -53,7 +53,7 @@
                                     <field name="exec_mode" />
                                     <field
                                         name="exec_as_user_id"
-                                        attrs="{'required': [('auth_type', '=', 'public')]}"
+                                        required="auth_type == 'public'"
                                     />
                                 </group>
                                 <group name="auth" string="Auth">
@@ -65,23 +65,19 @@
                                     <field name="request_method" />
                                     <field
                                         name="request_content_type"
-                                        attrs="{'required': [('request_method', 'in', ('POST', 'PUT'))],
-                                                   'invisible': [('request_method', 'not in', ('POST', 'PUT'))]}"
+                                        required="request_method in ('POST', 'PUT')"
+                                        invisible="request_method not in ('POST', 'PUT')"
                                     />
                                 </group>
                             </group>
                         </page>
-                        <page
-                            name="code"
-                            string="Code"
-                            attrs="{'invisible': [('exec_mode', '!=', 'code')]}"
-                        >
+                        <page name="code" string="Code" invisible="exec_mode != 'code'">
                             <field name="code_snippet" widget="ace" />
                         </page>
                         <page
                             name="code_help"
                             string="Code Help"
-                            attrs="{'invisible': [('exec_mode', '!=', 'code')]}"
+                            invisible="exec_mode != 'code'"
                         >
                             <field name="code_snippet_docs" />
                         </page>
