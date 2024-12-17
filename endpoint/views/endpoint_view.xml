@@ -133,7 +133,7 @@
         <field name="name">endpoint.endpoint.tree</field>
         <field name="model">endpoint.endpoint</field>
         <field name="arch" type="xml">
-            <tree
+            <list
                 decoration-muted="(not active)"
                 decoration-warning="(not registry_sync)"
             >
@@ -142,7 +142,7 @@
                 <field name="exec_mode" />
                 <field name="active" widget="boolean_toggle" />
                 <field name="registry_sync" />
-            </tree>
+            </list>
         </field>
     </record>
 
