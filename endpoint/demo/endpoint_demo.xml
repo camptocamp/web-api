@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo noupdate="1">
-
     <record id="endpoint_demo_1" model="endpoint.endpoint">
         <field name="name">Demo Endpoint 1</field>
         <field name="route">/demo/one</field>
@@ -82,5 +81,4 @@ result = {"response": Response(request.params.get("your_name", ""))}
 result = {"payload": "Method used:" + request.httprequest.method}
         </field>
     </record>
-
 </odoo>

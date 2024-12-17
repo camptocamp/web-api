@@ -2,7 +2,6 @@
 <!-- Copyright 2021 Camptocamp SA
      License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl). -->
 <odoo>
-
     <!-- Basic view inheritable by real models -->
     <record model="ir.ui.view" id="endpoint_mixin_form_view">
         <field name="name">endpoint.mixin.form</field>
@@ -93,10 +92,10 @@
         <field name="inherit_id" ref="endpoint.endpoint_mixin_form_view" />
         <field name="mode">primary</field>
         <field name="arch" type="xml">
-          <form position="attributes">
-            <!-- Needed just to make further inheritance happy -->
-            <attribute name="name">real</attribute>
-          </form>
+            <form position="attributes">
+                <!-- Needed just to make further inheritance happy -->
+                <attribute name="name">real</attribute>
+            </form>
         </field>
     </record>
 
@@ -161,5 +160,4 @@
         <field name="action" ref="endpoint_endpoint_act_window" />
         <field name="sequence" eval="100" />
     </record>
-
 </odoo>
