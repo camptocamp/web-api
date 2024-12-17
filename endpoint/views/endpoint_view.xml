@@ -133,7 +133,7 @@
         <field name="name">endpoint.endpoint.tree</field>
         <field name="model">endpoint.endpoint</field>
         <field name="arch" type="xml">
-            <tree
+            <list
                 decoration-muted="(not active)"
                 decoration-warning="(not registry_sync)"
             >
@@ -142,14 +142,14 @@
                 <field name="exec_mode" />
                 <field name="active" widget="boolean_toggle" />
                 <field name="registry_sync" />
-            </tree>
+            </list>
         </field>
     </record>
 
     <record model="ir.actions.act_window" id="endpoint_endpoint_act_window">
         <field name="name">Endpoints</field>
         <field name="res_model">endpoint.endpoint</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="domain">[]</field>
         <field name="context">{'search_default_all': 1}</field>
     </record>
