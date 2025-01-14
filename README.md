@@ -21,7 +21,7 @@ Available addons
 ----------------
 addon | version | maintainers | summary
 --- | --- | --- | ---
-[webservice](webservice/) | 18.0.1.0.0 | [![etobella](https://github.com/etobella.png?size=30px)](https://github.com/etobella) | Defines webservice abstract definition to be used generally
+[webservice](webservice/) | 18.0.1.1.0 | [![etobella](https://github.com/etobella.png?size=30px)](https://github.com/etobella) | Defines webservice abstract definition to be used generally
 
 [//]: # (end addons)
 
