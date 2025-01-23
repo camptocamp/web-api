@@ -99,9 +99,9 @@
         </field>
     </record>
 
-    <record model="ir.ui.view" id="endpoint_endpoint_search_view">
-        <field name="name">endpoint.endpoint.search</field>
-        <field name="model">endpoint.endpoint</field>
+    <record model="ir.ui.view" id="endpoint_mixin_search_view">
+        <field name="name">endpoint.mixin.search</field>
+        <field name="model">endpoint.mixin</field>
         <field name="arch" type="xml">
             <search>
                 <field name="name" />
@@ -129,9 +129,22 @@
         </field>
     </record>
 
-    <record model="ir.ui.view" id="endpoint_endpoint_tree_view">
-        <field name="name">endpoint.endpoint.tree</field>
+    <record model="ir.ui.view" id="endpoint_endpoint_search_view">
+        <field name="name">endpoint.endpoint.search</field>
         <field name="model">endpoint.endpoint</field>
+        <field name="inherit_id" ref="endpoint.endpoint_mixin_search_view" />
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <search position="attributes">
+                <!-- Needed just to make further inheritance happy -->
+                <attribute name="string" />
+            </search>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="endpoint_mixin_list_view">
+        <field name="name">endpoint.mixin.list</field>
+        <field name="model">endpoint.mixin</field>
         <field name="arch" type="xml">
             <list
                 decoration-muted="(not active)"
@@ -142,6 +155,19 @@
                 <field name="exec_mode" />
                 <field name="active" widget="boolean_toggle" />
                 <field name="registry_sync" />
+            </list>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="endpoint_endpoint_tree_view">
+        <field name="name">endpoint.endpoint.list</field>
+        <field name="model">endpoint.endpoint</field>
+        <field name="inherit_id" ref="endpoint.endpoint_mixin_list_view" />
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <list position="attributes">
+                <!-- Needed just to make further inheritance happy -->
+                <attribute name="string" />
             </list>
         </field>
     </record>
