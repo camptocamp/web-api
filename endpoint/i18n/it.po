@@ -19,7 +19,6 @@ msgstr ""
 #. module: endpoint
 #. odoo-python
 #: code:addons/endpoint/models/endpoint_mixin.py:0
-#, python-format
 msgid "'Exec as user' is mandatory for public endpoints."
 msgstr "'Esegui come utente' è obbligatorio per gli endpoint pubblici."
 
@@ -30,13 +29,13 @@ msgid "Active"
 msgstr "Attivo"
 
 #. module: endpoint
-#: model_terms:ir.ui.view,arch_db:endpoint.endpoint_endpoint_search_view
+#: model_terms:ir.ui.view,arch_db:endpoint.endpoint_mixin_search_view
 msgid "All"
 msgstr "Tutti"
 
 #. module: endpoint
-#: model_terms:ir.ui.view,arch_db:endpoint.endpoint_endpoint_search_view
 #: model_terms:ir.ui.view,arch_db:endpoint.endpoint_mixin_form_view
+#: model_terms:ir.ui.view,arch_db:endpoint.endpoint_mixin_search_view
 msgid "Archived"
 msgstr "In archivio"
 
@@ -137,7 +136,6 @@ msgstr "Modo esecuzione"
 #. module: endpoint
 #. odoo-python
 #: code:addons/endpoint/models/endpoint_mixin.py:0
-#, python-format
 msgid "Exec mode is set to `Code`: you must provide a piece of code"
 msgstr ""
 "Im modo di esecuzione è impostato a `Codice`: bisogna fornire del codice"
@@ -152,11 +150,6 @@ msgstr "ID"
 #: model:ir.model.fields,help:endpoint.field_endpoint_mixin__endpoint_hash
 msgid "Identify the route with its main params"
 msgstr "Identifica la rotta con questi parametri principali"
-
-#. module: endpoint
-#: model:ir.model.fields,field_description:endpoint.field_endpoint_endpoint____last_update
-msgid "Last Modified on"
-msgstr "Ultima modifica il"
 
 #. module: endpoint
 #: model:ir.model.fields,field_description:endpoint.field_endpoint_endpoint__write_uid
@@ -176,7 +169,6 @@ msgstr "Principale"
 #. module: endpoint
 #. odoo-python
 #: code:addons/endpoint/models/endpoint_mixin.py:0
-#, python-format
 msgid "Missing handler for exec mode %s"
 msgstr "Gestore non disponibile per il modo esecuzione %s"
 
@@ -200,6 +192,12 @@ msgstr ""
 "attraverso un'azione opportuna.\n"
 "\n"
 "Spento: record allineato con il registro, non c'è niente da fare."
+
+#. module: endpoint
+#: model:ir.model.fields,field_description:endpoint.field_endpoint_endpoint__readonly
+#: model:ir.model.fields,field_description:endpoint.field_endpoint_mixin__readonly
+msgid "Readonly"
+msgstr ""
 
 #. module: endpoint
 #: model:ir.model.fields,field_description:endpoint.field_endpoint_endpoint__registry_sync
@@ -257,7 +255,7 @@ msgid "Sync registry"
 msgstr "Sincronizza registro"
 
 #. module: endpoint
-#: model_terms:ir.ui.view,arch_db:endpoint.endpoint_endpoint_search_view
+#: model_terms:ir.ui.view,arch_db:endpoint.endpoint_mixin_search_view
 msgid "To sync"
 msgstr "Sa sincronizzare"
 
@@ -279,6 +277,8 @@ msgstr "Utilizzarlo per classificare i percorsi insieme"
 #. module: endpoint
 #. odoo-python
 #: code:addons/endpoint/models/endpoint_mixin.py:0
-#, python-format
 msgid "code_snippet should return a dict into `result` variable."
 msgstr "code_snippet deve restituire un dizIonaro nella variabile `result`."
+
+#~ msgid "Last Modified on"
+#~ msgstr "Ultima modifica il"

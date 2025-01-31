@@ -17,7 +17,6 @@ msgstr ""
 #. module: endpoint
 #. odoo-python
 #: code:addons/endpoint/models/endpoint_mixin.py:0
-#, python-format
 msgid "'Exec as user' is mandatory for public endpoints."
 msgstr ""
 
@@ -28,13 +27,13 @@ msgid "Active"
 msgstr ""
 
 #. module: endpoint
-#: model_terms:ir.ui.view,arch_db:endpoint.endpoint_endpoint_search_view
+#: model_terms:ir.ui.view,arch_db:endpoint.endpoint_mixin_search_view
 msgid "All"
 msgstr ""
 
 #. module: endpoint
-#: model_terms:ir.ui.view,arch_db:endpoint.endpoint_endpoint_search_view
 #: model_terms:ir.ui.view,arch_db:endpoint.endpoint_mixin_form_view
+#: model_terms:ir.ui.view,arch_db:endpoint.endpoint_mixin_search_view
 msgid "Archived"
 msgstr ""
 
@@ -135,7 +134,6 @@ msgstr ""
 #. module: endpoint
 #. odoo-python
 #: code:addons/endpoint/models/endpoint_mixin.py:0
-#, python-format
 msgid "Exec mode is set to `Code`: you must provide a piece of code"
 msgstr ""
 
@@ -148,11 +146,6 @@ msgstr ""
 #: model:ir.model.fields,help:endpoint.field_endpoint_endpoint__endpoint_hash
 #: model:ir.model.fields,help:endpoint.field_endpoint_mixin__endpoint_hash
 msgid "Identify the route with its main params"
-msgstr ""
-
-#. module: endpoint
-#: model:ir.model.fields,field_description:endpoint.field_endpoint_endpoint____last_update
-msgid "Last Modified on"
 msgstr ""
 
 #. module: endpoint
@@ -173,7 +166,6 @@ msgstr ""
 #. module: endpoint
 #. odoo-python
 #: code:addons/endpoint/models/endpoint_mixin.py:0
-#, python-format
 msgid "Missing handler for exec mode %s"
 msgstr ""
 
@@ -191,6 +183,12 @@ msgid ""
 "No change will be active until this flag is set to false via proper action.\n"
 "\n"
 "OFF: record in line with the registry, nothing to do."
+msgstr ""
+
+#. module: endpoint
+#: model:ir.model.fields,field_description:endpoint.field_endpoint_endpoint__readonly
+#: model:ir.model.fields,field_description:endpoint.field_endpoint_mixin__readonly
+msgid "Readonly"
 msgstr ""
 
 #. module: endpoint
@@ -247,7 +245,7 @@ msgid "Sync registry"
 msgstr ""
 
 #. module: endpoint
-#: model_terms:ir.ui.view,arch_db:endpoint.endpoint_endpoint_search_view
+#: model_terms:ir.ui.view,arch_db:endpoint.endpoint_mixin_search_view
 msgid "To sync"
 msgstr ""
 
@@ -267,6 +265,5 @@ msgstr ""
 #. module: endpoint
 #. odoo-python
 #: code:addons/endpoint/models/endpoint_mixin.py:0
-#, python-format
 msgid "code_snippet should return a dict into `result` variable."
 msgstr ""
