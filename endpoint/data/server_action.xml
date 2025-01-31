@@ -7,8 +7,7 @@
         <field name="binding_model_id" ref="endpoint.model_endpoint_endpoint" />
         <field name="binding_type">action</field>
         <field name="state">code</field>
-        <field name="code">
-records.filtered(lambda x: not x.registry_sync).write({"registry_sync": True})
+        <field name="code">records.write({"registry_sync": True})
       </field>
     </record>
 </odoo>
