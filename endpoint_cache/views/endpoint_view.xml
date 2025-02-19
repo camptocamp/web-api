@@ -17,11 +17,17 @@
                             string="View caches"
                             type="object"
                         />
+                <button
+                            class="oe_inline"
+                            name="action_purge_cache_attachments"
+                            string="Purge caches"
+                            type="object"
+                        />
               </group>
               <hr string="Cache usage example" />
               <pre>
 # get the name of the cache
-cache_name = endpoint._endpoint_make_cache_name("json")
+cache_name = endpoint._endpoint_cache_make_name("json")
 # check if the cache exists
 cached = endpoint._endpoint_cache_get(cache_name)
 if cached:
