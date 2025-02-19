@@ -1,1 +1,3 @@
 responses
+
+odoo14-addon-endpoint_cache @ git+https://github.com/OCA/web-api@refs/pull/90/head#subdirectory=setup/endpoint_cache
