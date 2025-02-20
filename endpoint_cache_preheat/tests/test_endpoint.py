@@ -192,3 +192,33 @@ class TestEndpoint(CommonEndpoint):
                 self._run_cron()
                 trap.assert_jobs_count(0)
             self.assertEqual(ep_daily.cache_preheat_ts, now)
+
+    def test_action_preheat_cache_async(self):
+        now = fields.Datetime.from_string("2025-02-19 23:00:00")
+        ep_daily = self.endpoint1.copy({"route": "/daily"})
+        ep_daily.cache_preheat = True
+        ep_daily.code_snippet = textwrap.dedent(
+            """
+            cache_name = endpoint._endpoint_cache_make_name("json")
+            cached = endpoint._endpoint_cache_get(cache_name)
+            if cached:
+                result = cached
+            else:
+                result = json.dumps({"foo": "bar"})
+                endpoint._endpoint_cache_store(cache_name, result)
+            resp = Response(result, content_type="application/json", status=200)
+            result = dict(response=resp)
+            """
+        )
+        with trap_jobs() as trap:
+            ep_daily.action_preheat_cache_async()
+            trap.assert_jobs_count(1)
+            trap.assert_enqueued_job(ep_daily._cron_endpoint_cache_preheat)
+            trap.perform_enqueued_jobs()
+        self.assertEqual(ep_daily.cache_preheat_ts, now)
+
+    def test_action_cache_purge(self):
+        # purging cache should reset the TS
+        self.endpoint1.cache_preheat_ts = fields.Datetime.now()
+        self.endpoint1.action_purge_cache_attachments()
+        self.assertFalse(self.endpoint1.cache_preheat_ts)

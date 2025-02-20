@@ -48,9 +48,21 @@ class EndpointMixin(models.AbstractModel):
                     description=f"Pre-heat cache for endpoint {rec.route}"
                 )._cron_endpoint_cache_preheat()
                 _logger.info("cron_endpoint_cache_preheat preheated rec=%s", rec.id)
+        _logger.info("cron_endpoint_cache_preheat finished")
         return True
 
     def _cron_endpoint_cache_preheat(self):
         """Preheat cache for cron"""
         self._endpoint_cache_preheat()
         self.cache_preheat_ts = fields.Datetime.now()
+
+    def _endpoint_cache_wipe(self, domain):
+        super()._endpoint_cache_wipe(domain)
+        self.cache_preheat_ts = False
+
+    def action_preheat_cache_async(self):
+        self.action_purge_cache_attachments()
+        self.with_delay(
+            description=f"Pre-heat cache for endpoint {self.route}"
+        )._cron_endpoint_cache_preheat()
+        return {"type": "ir.actions.act_window_close"}
