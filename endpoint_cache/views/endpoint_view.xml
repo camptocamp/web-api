@@ -11,17 +11,36 @@
             <page string="Cache">
               <group>
                 <field name="cache_policy" />
+                <field name="cache_att_count" invisible="1" />
                 <button
                             class="oe_inline"
                             name="action_view_cache_attachments"
                             string="View caches"
                             type="object"
+                            colspan="2"
+                            attrs="{'invisible': [('cache_att_count', '=', 0)]}"
+                        />
+                <button
+                            class="oe_inline"
+                            name="action_purge_cache_attachments"
+                            string="Purge caches"
+                            type="object"
+                            colspan="2"
+                            attrs="{'invisible': [('cache_att_count', '=', 0)]}"
+                        />
+                <button
+                            class="oe_inline"
+                            name="action_preheat_cache"
+                            string="Pre-heat cache"
+                            help="Warning: this might take too long to complete if the endpoint uses expensive computations."
+                            type="object"
+                            colspan="2"
                         />
               </group>
               <hr string="Cache usage example" />
               <pre>
 # get the name of the cache
-cache_name = endpoint._endpoint_make_cache_name("json")
+cache_name = endpoint._endpoint_cache_make_name("json")
 # check if the cache exists
 cached = endpoint._endpoint_cache_get(cache_name)
 if cached:
