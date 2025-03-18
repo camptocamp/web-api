@@ -23,11 +23,12 @@ class EndpoinAuthApikeytHttpCase(HttpCase):
         cls.env["endpoint.endpoint"].search([])._handle_registry_sync()
 
     def tearDown(self):
-        self.env["ir.http"]._clear_routing_map()
+        # Clear cache for method ``ir.http.routing_map()``
+        self.env.registry.clear_cache("routing")
         super().tearDown()
 
     def _make_url(self, route):
-        return "http://127.0.0.1:%s%s" % (tools.config["http_port"], route)
+        return f"http://127.0.0.1:{tools.config['http_port']}{route}"
 
     def _make_request(self, route, api_key=None, headers=None):
         # use requests because you cannot easily manipulate the request w/ `url_open`

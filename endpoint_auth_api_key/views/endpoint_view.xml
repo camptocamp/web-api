@@ -11,14 +11,14 @@
                 <field
                     name="auth_api_key_group_ids"
                     widget="many2many_tags"
-                    attrs="{'invisible': [('auth_type', '!=', 'api_key')]}"
+                    invisible="auth_type != 'api_key'"
                 />
                 <button
                     class="btn-sm"
                     type="object"
                     name="action_view_api_key_groups"
                     string="Manage groups"
-                    attrs="{'invisible': [('auth_type', '!=', 'api_key')]}"
+                    invisible="auth_type != 'api_key'"
                 />
             </group>
         </field>
