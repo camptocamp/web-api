@@ -8,7 +8,6 @@ from odoo import fields, models
 
 
 class EndpointMixin(models.AbstractModel):
-
     _inherit = "endpoint.mixin"
 
     auth_api_key_group_ids = fields.Many2many(
