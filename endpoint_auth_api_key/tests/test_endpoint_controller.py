@@ -11,6 +11,8 @@ from odoo import tools
 from odoo.tests.common import HttpCase
 from odoo.tools.misc import mute_logger
 
+from odoo.addons.endpoint_route_handler.registry import EndpointRegistry
+
 
 @unittest.skipIf(os.getenv("SKIP_HTTP_CASE"), "EndpoinAuthApikeytHttpCase skipped")
 class EndpoinAuthApikeytHttpCase(HttpCase):
@@ -23,11 +25,11 @@ class EndpoinAuthApikeytHttpCase(HttpCase):
         cls.env["endpoint.endpoint"].search([])._handle_registry_sync()
 
     def tearDown(self):
-        self.env["ir.http"]._clear_routing_map()
+        EndpointRegistry.wipe_registry_for(self.env.cr)
         super().tearDown()
 
     def _make_url(self, route):
-        return "http://127.0.0.1:%s%s" % (tools.config["http_port"], route)
+        return "http://127.0.0.1:{}{}".format(tools.config["http_port"], route)
 
     def _make_request(self, route, api_key=None, headers=None):
         # use requests because you cannot easily manipulate the request w/ `url_open`
