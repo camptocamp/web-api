@@ -2,7 +2,6 @@
 <!-- Copyright 2021 Camptocamp SA
      License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl). -->
 <odoo>
-
     <record model="ir.ui.view" id="endpoint_mixin_form_view">
         <field name="model">endpoint.mixin</field>
         <field name="inherit_id" ref="endpoint.endpoint_mixin_form_view" />
@@ -23,5 +22,4 @@
             </group>
         </field>
     </record>
-
 </odoo>
