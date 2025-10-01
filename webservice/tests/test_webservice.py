@@ -132,6 +132,16 @@ class TestWebService(CommonWebService):
         self.assertEqual(responses.calls[0].request.body, "demo_response")
 
     @responses.activate
+    def test_web_service_delete(self):
+        responses.add(responses.DELETE, self.url, body="{}", status=204)
+        result = self.webservice.call("delete")
+        self.assertEqual(result, b"{}")
+        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(
+            responses.calls[0].request.headers["Content-Type"], "application/xml"
+        )
+
+    @responses.activate
     def test_web_service_backend_username(self):
         self.webservice.write(
             {"auth_type": "user_pwd", "username": "user", "password": "pass"}
