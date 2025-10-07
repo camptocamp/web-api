@@ -3,7 +3,11 @@
 # @author Simone Orsi <simahawk@gmail.com>
 # @author Alexandre Fayolle <alexandre.fayolle@camptocamp.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+import json
 import logging
+from datetime import datetime
+
+from requests_oauthlib import OAuth2Session
 
 from odoo import _, api, exceptions, fields, models
 
@@ -57,6 +61,19 @@ class WebserviceBackend(models.Model):
         help="random key generated when authorization flow starts "
         "to ensure that no CSRF attack happen"
     )
+    oauth2_token_expiration_datetime = fields.Datetime(
+        string="Token Expiration",
+        compute="_compute_oauth2_token_expiration_datetime",
+        compute_sudo=True,
+        store=True,
+    )
+    oauth2_use_refresh_token = fields.Boolean(string="Use Refresh Token")
+    oauth2_refresh_token_params = fields.Text(
+        string="Refresh Token Params",
+        help="Parameters used by ``OAuth2Session.request()`` method to fetch a new"
+        " token through refresh of the old one",
+        default=lambda self: self._get_default_oauth2_refresh_token_params(),
+    )
     content_type = fields.Selection(
         [
             ("application/json", "JSON"),
@@ -66,6 +83,31 @@ class WebserviceBackend(models.Model):
         required=True,
     )
     company_id = fields.Many2one("res.company", string="Company")
+
+    @api.model
+    def _get_default_oauth2_refresh_token_params(self):
+        code = OAuth2Session.request.__code__
+        varnames = [f"\n# - {v}" for v in code.co_varnames[1 : code.co_argcount + 1]]
+        txt = """
+# Define a dictionary with keyword arguments to pass to ``OAuth2Session.request()``
+#
+# ``OAuth2Session.request()`` arguments:%s
+#
+# Available variables to use for dict definition (see example below):
+# - webservice: current record
+# - adapter: webservice's request adapter
+# - old_token: pre-existing token (as dictionary)
+
+{
+    'method': 'POST',
+    'url': webservice.oauth2_token_url,
+    'data': {
+        'key1': adapter.get_key1(),
+        'key2': old_token['key2'],
+    },
+}
+"""
+        return (txt % "".join(varnames)).lstrip()
 
     @api.constrains("auth_type")
     def _check_auth_type(self):
@@ -175,3 +217,28 @@ class WebserviceBackend(models.Model):
         res = super()._compute_server_env()
         self.filtered(lambda r: r.auth_type != "oauth2").oauth2_flow = None
         return res
+
+    @api.depends("oauth2_token")
+    def _compute_oauth2_token_expiration_datetime(self):
+        from_ts = datetime.fromtimestamp
+        for ws in self:
+            token_str = ws.oauth2_token
+            try:
+                token = json.loads(token_str or "{}") or {}
+                ws.oauth2_token_expiration_datetime = from_ts(token.get("expires_at"))
+            except Exception as e:
+                if token_str:
+                    _logger.warning(
+                        "Could not determine token expiration date from %s,"
+                        " got error: %s: %s",
+                        token_str,
+                        e.__class__.__name__,
+                        str(e),
+                    )
+                ws.oauth2_token_expiration_datetime = None
+
+    def button_refresh_token(self):
+        self.ensure_one()
+        adapter = self._get_adapter()
+        new_token = adapter._fetch_refresh_token(json.loads(self.oauth2_token))
+        self.oauth2_token = json.dumps(new_token)
