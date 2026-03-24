@@ -6,13 +6,13 @@
 {
     "name": "WebService",
     "summary": """Defines webservice abstract definition to be used generally""",
-    "version": "18.0.1.1.0",
+    "version": "19.0.1.1.0",
     "license": "AGPL-3",
     "development_status": "Production/Stable",
     "maintainers": ["etobella"],
     "author": "Creu Blanca, Camptocamp, Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/web-api",
-    "depends": ["component"],
+    "depends": ["component", "web"],
     "external_dependencies": {"python": ["requests-oauthlib", "oauthlib", "responses"]},
     "data": [
         "security/ir.model.access.csv",
