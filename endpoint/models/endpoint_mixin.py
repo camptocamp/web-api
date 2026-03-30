@@ -6,7 +6,7 @@ import textwrap
 
 import werkzeug
 
-from odoo import _, api, exceptions, fields, http, models
+from odoo import api, exceptions, fields, http, models
 from odoo.exceptions import UserError
 from odoo.tools import safe_eval
 
@@ -75,14 +75,18 @@ class EndpointMixin(models.AbstractModel):
     def _validate_exec__code(self):
         if not self._code_snippet_valued():
             raise UserError(
-                _("Exec mode is set to `Code`: you must provide a piece of code")
+                self.env._(
+                    "Exec mode is set to `Code`: you must provide a piece of code"
+                )
             )
 
     @api.constrains("auth_type")
     def _check_auth(self):
         for rec in self:
             if rec.auth_type == "public" and not rec.exec_as_user_id:
-                raise UserError(_("'Exec as user' is mandatory for public endpoints."))
+                raise UserError(
+                    self.env._("'Exec as user' is mandatory for public endpoints.")
+                )
 
     def _default_code_snippet_docs(self):
         return """
@@ -177,7 +181,7 @@ class EndpointMixin(models.AbstractModel):
                 (
                     self.env.uid,
                     "server",
-                    self._cr.dbname,
+                    self.env.cr.dbname,
                     __name__,
                     level,
                     message,
@@ -192,11 +196,11 @@ class EndpointMixin(models.AbstractModel):
             return {}
         eval_ctx = self._get_code_snippet_eval_context(request)
         snippet = self.code_snippet
-        safe_eval.safe_eval(snippet, eval_ctx, mode="exec", nocopy=True)
+        safe_eval.safe_eval(snippet, eval_ctx, mode="exec")
         result = eval_ctx.get("result")
         if not isinstance(result, dict):
             raise exceptions.UserError(
-                _("code_snippet should return a dict into `result` variable.")
+                self.env._("code_snippet should return a dict into `result` variable.")
             )
         return result
 
@@ -235,7 +239,7 @@ class EndpointMixin(models.AbstractModel):
             return getattr(self, "_handle_exec__" + self.exec_mode)
         except AttributeError as e:
             raise UserError(
-                _("Missing handler for exec mode %s") % self.exec_mode
+                self.env._("Missing handler for exec mode %s", self.exec_mode)
             ) from e
 
     def _handle_request(self, request):

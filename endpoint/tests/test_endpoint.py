@@ -18,9 +18,7 @@ from .common import CommonEndpoint
 class TestEndpoint(CommonEndpoint):
     @classmethod
     def _setup_records(cls):
-        res = super()._setup_records()
-        cls.endpoint = cls.env.ref("endpoint.endpoint_demo_1")
-        return res
+        return super()._setup_records()
 
     @mute_logger("odoo.sql_db")
     def test_endpoint_unique(self):

@@ -4,7 +4,7 @@
 {
     "name": "Endpoint",
     "summary": """Provide custom endpoint machinery.""",
-    "version": "18.0.1.1.1",
+    "version": "19.0.1.0.0",
     "license": "LGPL-3",
     "development_status": "Beta",
     "author": "Camptocamp,Odoo Community Association (OCA)",
@@ -16,8 +16,5 @@
         "security/ir.model.access.csv",
         "security/ir_rule.xml",
         "views/endpoint_view.xml",
-    ],
-    "demo": [
-        "demo/endpoint_demo.xml",
     ],
 }

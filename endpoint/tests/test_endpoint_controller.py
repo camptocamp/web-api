@@ -9,12 +9,15 @@ from unittest import skipIf
 from odoo.tests.common import HttpCase
 from odoo.tools.misc import mute_logger
 
+from .common import _setup_demo_records
+
 
 @skipIf(os.getenv("SKIP_HTTP_CASE"), "HttpCase skipped")
 class EndpointHttpCase(HttpCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        _setup_demo_records(cls.env)
         # force sync for demo records
         cls.env["endpoint.endpoint"].search([])._handle_registry_sync()
 
@@ -35,7 +38,7 @@ class EndpointHttpCase(HttpCase):
     def test_call_route_update(self):
         # Ensure that a route that gets updated is not available anymore
         self.authenticate("admin", "admin")
-        endpoint = self.env.ref("endpoint.endpoint_demo_1")
+        endpoint = self.env["endpoint.endpoint"].search([("route", "=", "/demo/one")])
         endpoint.route += "/new"
         # force sync
         endpoint._handle_registry_sync()

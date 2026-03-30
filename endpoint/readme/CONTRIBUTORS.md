@@ -1,1 +1,2 @@
 - Simone Orsi \<<simone.orsi@camptocamp.com>\>
+- Alex Garcia \<<alex@studi73.es>\>

@@ -7,7 +7,101 @@ import contextlib
 from odoo.tests.common import TransactionCase, tagged
 from odoo.tools import DotDict
 
-from odoo.addons.website.tools import MockRequest
+from odoo.addons.http_routing.tests.common import MockRequest
+
+
+def _setup_demo_records(env):
+    """Create demo records for tests."""
+    demo_user = env["res.users"].search([("login", "=", "demo")], limit=1)
+    if not demo_user:
+        demo_user = env["res.users"].create(
+            {"login": "demo", "name": "Marc Demo", "group_ids": [(6, 0, [])]}
+        )
+    endpoints = env["endpoint.endpoint"]
+    endpoints += env["endpoint.endpoint"].create(
+        {
+            "name": "Demo Endpoint 1",
+            "route": "/demo/one",
+            "request_method": "GET",
+            "exec_mode": "code",
+            "code_snippet": 'result = {"response": Response("ok")}',
+        }
+    )
+    endpoints += env["endpoint.endpoint"].create(
+        {
+            "name": "Demo Endpoint 2",
+            "route": "/demo/as_demo_user",
+            "request_method": "GET",
+            "auth_type": "public",
+            "exec_as_user_id": demo_user.id,
+            "exec_mode": "code",
+            "code_snippet": (
+                'result = {"response": Response("My name is: " + user.name)}'
+            ),
+        }
+    )
+    endpoints += env["endpoint.endpoint"].create(
+        {
+            "name": "Demo Endpoint 3",
+            "route": "/demo/json_data",
+            "request_method": "GET",
+            "auth_type": "public",
+            "exec_as_user_id": demo_user.id,
+            "exec_mode": "code",
+            "code_snippet": 'result = {"payload": {"a": 1, "b": 2}}',
+        }
+    )
+    endpoints += env["endpoint.endpoint"].create(
+        {
+            "name": "Demo Endpoint 4",
+            "route": "/demo/raise_not_found",
+            "request_method": "GET",
+            "auth_type": "public",
+            "exec_as_user_id": demo_user.id,
+            "exec_mode": "code",
+            "code_snippet": "raise werkzeug.exceptions.NotFound()",
+        }
+    )
+    endpoints += env["endpoint.endpoint"].create(
+        {
+            "name": "Demo Endpoint 5",
+            "route": "/demo/raise_validation_error",
+            "request_method": "GET",
+            "auth_type": "public",
+            "exec_as_user_id": demo_user.id,
+            "exec_mode": "code",
+            "code_snippet": (
+                'raise exceptions.ValidationError("Sorry, you cannot do this!")'
+            ),
+        }
+    )
+    endpoints += env["endpoint.endpoint"].create(
+        {
+            "name": "Demo Endpoint 6",
+            "route": "/demo/value_from_request",
+            "request_method": "GET",
+            "auth_type": "public",
+            "exec_as_user_id": demo_user.id,
+            "exec_mode": "code",
+            "code_snippet": (
+                'result = {"response": Response(request.params.get("your_name", ""))}'
+            ),
+        }
+    )
+    endpoints += env["endpoint.endpoint"].create(
+        {
+            "name": "Demo Endpoint 7",
+            "route": "/demo/bad_method",
+            "request_method": "GET",
+            "auth_type": "public",
+            "exec_as_user_id": demo_user.id,
+            "exec_mode": "code",
+            "code_snippet": (
+                'result = {"payload": "Method used:" + request.httprequest.method}'
+            ),
+        }
+    )
+    return endpoints
 
 
 @tagged("-at_install", "post_install")
@@ -31,7 +125,7 @@ class CommonEndpoint(TransactionCase):
 
     @classmethod
     def _setup_records(cls):
-        pass
+        cls.endpoint = _setup_demo_records(cls.env)[0]
 
     @contextlib.contextmanager
     def _get_mocked_request(
