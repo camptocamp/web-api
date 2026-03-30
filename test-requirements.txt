@@ -1,0 +1,1 @@
+odoo-addon-rpc_helper @ git+https://github.com/OCA/server-tools.git@refs/pull/3539/head#subdirectory=rpc_helper
