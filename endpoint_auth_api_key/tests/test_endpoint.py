@@ -7,18 +7,13 @@ import werkzeug
 
 from odoo.tools.misc import mute_logger
 
-from odoo.addons.endpoint.tests.common import CommonEndpoint
+from .common import CommonEndpointAuthAPIKey
 
 
-class TestEndpoint(CommonEndpoint):
+class TestEndpoint(CommonEndpointAuthAPIKey):
     @classmethod
     def _setup_records(cls):
-        super()._setup_records()
-        cls.endpoint = cls.env.ref("endpoint_auth_api_key.endpoint_demo_1")
-        cls.key_group = cls.env.ref("endpoint_auth_api_key.auth_api_key_group_demo")
-        cls.api_key = cls.env.ref("endpoint_auth_api_key.auth_api_key_demo")
-        cls.api_key2 = cls.env.ref("endpoint_auth_api_key.auth_api_key_demo2")
-        return
+        return super()._setup_records()
 
     @mute_logger("endpoint.endpoint")
     def test_endpoint_validate_request_no_key(self):
