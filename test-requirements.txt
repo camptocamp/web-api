@@ -1,1 +1,4 @@
+odoo-addon-endpoint @ git+https://github.com/OCA/web-api.git@refs/pull/127/head#subdirectory=endpoint
+odoo-addon-auth_api_key @ git+https://github.com/OCA/server-auth.git@refs/pull/873/head#subdirectory=auth_api_key
+odoo-addon-auth_api_key_group @ git+https://github.com/OCA/server-auth.git@refs/pull/921/head#subdirectory=auth_api_key_group
 odoo-addon-rpc_helper @ git+https://github.com/OCA/server-tools.git@refs/pull/3539/head#subdirectory=rpc_helper
