@@ -1,4 +1,6 @@
 # generated from manifests external_dependencies
+PyYAML
+jsonschema
 oauthlib
 requests-oauthlib
 responses
