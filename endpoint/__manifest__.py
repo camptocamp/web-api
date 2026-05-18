@@ -11,6 +11,9 @@
     "maintainers": ["simahawk"],
     "website": "https://github.com/OCA/web-api",
     "depends": ["endpoint_route_handler", "rpc_helper"],
+    "external_dependencies": {
+        "python": ["jsonschema", "PyYAML"],
+    },
     "data": [
         "data/server_action.xml",
         "security/ir.model.access.csv",
