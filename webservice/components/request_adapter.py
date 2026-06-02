@@ -179,6 +179,7 @@ class BackendApplicationOAuth2RestRequestsAdapter(Component):
 
     def _request(self, method, url=None, url_params=None, **kwargs):
         url = self._get_url(url=url, url_params=url_params)
+        content_only = kwargs.pop("content_only", True)
         new_kwargs = kwargs.copy()
         new_kwargs.update(
             {
@@ -191,7 +192,9 @@ class BackendApplicationOAuth2RestRequestsAdapter(Component):
             # pylint: disable=E8106
             request = session.request(method, url, **new_kwargs)
             request.raise_for_status()
-            return request.content
+            if content_only:
+                return request.content
+            return request
 
 
 class WebApplicationOAuth2RestRequestsAdapter(Component):
