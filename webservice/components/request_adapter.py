@@ -171,7 +171,7 @@ class BackendApplicationOAuth2RestRequestsAdapter(Component):
         with OAuth2Session(client=client) as session:
             token = session.fetch_token(
                 token_url=oauth_params["oauth2_token_url"],
-                cliend_id=oauth_params["oauth2_clientid"],
+                client_id=oauth_params["oauth2_clientid"],
                 client_secret=oauth_params["oauth2_client_secret"],
                 audience=oauth_params.get("oauth2_audience") or "",
             )
