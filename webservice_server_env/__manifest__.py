@@ -14,5 +14,6 @@
     "author": "Creu Blanca, Camptocamp, Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/web-api",
     "depends": ["web", "webservice", "server_environment"],
+    "uninstall_hook": "uninstall_hook",
     "auto_install": True,
 }
