@@ -43,6 +43,13 @@ HTTP call returns by default the content of the response. A context
 .. contents::
    :local:
 
+Configuration
+=============
+
+When a database is neutralized, stored webservice backend credentials
+(username, password, API key, OAuth2 client id/secret/token, custom
+OAuth2 auth header value) are cleared.
+
 Bug Tracker
 ===========
 
