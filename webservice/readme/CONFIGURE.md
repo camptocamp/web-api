@@ -29,3 +29,6 @@ configured as:
     Client Authentication = Custom Authorization header
     Client Auth Header    = Authorization
     Client Auth Value     = SSWS <token>
+
+When a database is neutralized, stored webservice backend credentials
+(username, password, API key, OAuth2 client id/secret/token) are cleared.
