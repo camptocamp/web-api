@@ -1,0 +1,2 @@
+odoo-addon-webservice @ git+https://github.com/OCA/web-api.git@refs/pull/143/head#subdirectory=webservice
+odoo-addon-webservice_server_env @ git+https://github.com/OCA/web-api.git@refs/pull/143/head#subdirectory=webservice_server_env
