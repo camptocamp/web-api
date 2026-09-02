@@ -8,12 +8,19 @@
         <field name="model">webservice.backend</field>
         <field name="arch" type="xml">
             <form>
+                <field name="oauth2_token" invisible="1" />
                 <header>
                     <button
                         type="object"
                         name="button_authorize"
                         string="OAuth Authorize"
                         invisible="auth_type != 'oauth2' or oauth2_flow != 'web_application'"
+                    />
+                    <button
+                        type="object"
+                        name="button_refresh_token"
+                        string="Refresh Token"
+                        invisible="auth_type != 'oauth2' or not (oauth2_token and oauth2_token != '{}') or not oauth2_use_refresh_token"
                     />
                 </header>
                 <sheet>
@@ -92,8 +99,26 @@
                             required="auth_type == 'oauth2'"
                         />
                         <field
+                            name="oauth2_token_expiration_datetime"
+                            invisible="auth_type != 'oauth2'"
+                        />
+                        <field
                             name="oauth2_audience"
                             invisible="auth_type != 'oauth2'"
+                        />
+                    </group>
+                    <group
+                        name="oauth2_refresh_token_params_group"
+                        invisible="auth_type != 'oauth2'"
+                    >
+                        <field
+                            name="oauth2_use_refresh_token"
+                            widget="boolean_toggle"
+                        />
+                        <field
+                            name="oauth2_refresh_token_params"
+                            widget="code"
+                            invisible="not oauth2_use_refresh_token"
                         />
                     </group>
                 </sheet>
