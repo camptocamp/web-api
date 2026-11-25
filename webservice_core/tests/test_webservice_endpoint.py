@@ -351,3 +351,34 @@ class TestWebserviceEndpoint(CommonWebService):
             self.endpoint.full_url_display,
             "https://other.demo.odoo/orders/{order_id}/status",
         )
+
+    def test_absolute_url_outside_base_refused(self):
+        """An absolute URL outside the base is refused by default."""
+        with self.assertRaisesRegex(exceptions.UserError, "absolute URL"):
+            self.backend._compose_url("https://evil.example.com/steal")
+
+    def test_absolute_url_inside_base_allowed(self):
+        """An absolute URL starting with the base URL is accepted."""
+        url = self.url + "orders"
+        self.assertEqual(self.backend._compose_url(url), url)
+
+    def test_absolute_url_outside_base_with_flag(self):
+        """The hidden system parameter allows absolute URLs outside the base."""
+        self.env["ir.config_parameter"].sudo().set_param(
+            "webservice.allow_absolute_url", "True"
+        )
+        url = "https://other.example.com/x"
+        with self.assertLogs(
+            "odoo.addons.webservice_core.models.webservice_request_mixin",
+            level="WARNING",
+        ) as logs:
+            self.assertEqual(self.backend._compose_url(url), url)
+        self.assertEqual(
+            logs.output,
+            [
+                "WARNING:odoo.addons.webservice_core.models."
+                "webservice_request_mixin:Absolute URL outside the base allowed "
+                "by the system parameter webservice.allow_absolute_url (insecure, "
+                "backend credentials may be sent to https://other.example.com/x)"
+            ],
+        )
