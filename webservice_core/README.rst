@@ -1,7 +1,3 @@
-.. image:: https://odoo-community.org/readme-banner-image
-   :target: https://odoo-community.org/get-involved?utm_source=readme
-   :alt: Odoo Community Association
-
 ===============
 WebService Core
 ===============
@@ -17,7 +13,7 @@ WebService Core
 .. |badge1| image:: https://img.shields.io/badge/maturity-Production%2FStable-green.png
     :target: https://odoo-community.org/page/development-status
     :alt: Production/Stable
-.. |badge2| image:: https://img.shields.io/badge/license-AGPL--3-blue.png
+.. |badge2| image:: https://img.shields.io/badge/licence-AGPL--3-blue.png
     :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
     :alt: License: AGPL-3
 .. |badge3| image:: https://img.shields.io/badge/github-OCA%2Fweb--api-lightgray.png?logo=github
@@ -95,6 +91,20 @@ Content-Type, Timeout, Headers and Querystring Params, overriding the
 backend's own for that specific endpoint - set only what needs to
 differ.
 
+**Access rights**
+
+- Configuring the webservice records (backends, endpoints, headers,
+  querystring params) requires the *Administration / Settings* group.
+- Calling them requires the *Webservice User* group, which gives read
+  access to the webservice records. The ``call*`` methods are not
+  available via RPC: they can only be called from server-side code,
+  which should decide who may trigger a call.
+- The credentials (API key, password, OAuth2 secrets and token, header
+  and querystring param values) can be read by administrators only. A
+  call reads the configuration as superuser, after checking that the
+  current user can read the endpoint and its backend, and drops the data
+  read from the cache at the end of the call.
+
 Usage
 =====
 
@@ -116,13 +126,18 @@ arguments work too (``data``, ``json``, ``params``, ``files``, ...):
    backend.call("post", json={"foo": "bar"})
 
 **URL**: by default the backend's own ``url`` is used. Pass ``url`` to
-hit a different path - relative paths are appended to the backend's URL,
-a full ``http(s)://`` URL is used as-is:
+hit a different path - relative paths are appended to the backend's URL.
+A full ``http(s)://`` URL is accepted only if it starts with the
+backend's URL, as the backend credentials would otherwise be sent to an
+arbitrary host:
 
 .. code:: python
 
    backend.call("get", url="orders")  # -> <backend url>/orders
-   backend.call("get", url="https://other.example.com/orders")
+
+The system parameter ``webservice.allow_absolute_url`` set to ``True``
+bypasses this check and logs a warning on every such call. It is
+insecure and deprecated: it will be discarded on migration.
 
 If the backend's URL (or the ``url`` passed above) contains
 ``{placeholder}`` tokens, fill them with ``url_params``:
