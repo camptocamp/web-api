@@ -4,6 +4,7 @@
 # @author Alexandre Fayolle <alexandre.fayolle@camptocamp.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import logging
+from contextlib import contextmanager
 
 import requests
 
@@ -169,20 +170,47 @@ class WebserviceRequestMixin(models.AbstractModel):
     def _normalize_tech_name(self, name):
         return self.env["ir.http"]._slugify(name).replace("-", "_")
 
+    @contextmanager
+    def _call_as_superuser(self):
+        """Yield the records as superuser, then drop the data read from the cache.
+
+        The caller is not expected to have access to the webservice records:
+        their configuration (credentials included) is read as superuser.
+        The ORM cache is shared by all the environments of the transaction
+        and a cache hit does not check the access rights, so the records read
+        are invalidated at the end to not leave the values readable.
+        """
+        records = self.sudo()
+        try:
+            yield records
+        finally:
+            records._invalidate_call_cache()
+
+    def _get_call_records(self):
+        """Return the records whose data is read to perform a call."""
+        return self
+
+    def _invalidate_call_cache(self):
+        for record in self._get_call_records():
+            lines = record.header_ids | record.querystring_param_ids
+            lines.invalidate_recordset()
+            record.invalidate_recordset()
+
     @api.private
     def call(self, method, *args, **kwargs):
-        kwargs = self._call_prepare(**kwargs)
-        _logger.debug(
-            "%s: call %s %s %s",
-            self.display_name,
-            method,
-            args,
-            self._sanitize_kwargs_for_log(kwargs),
-        )
-        handler = getattr(self, "_handle_call_for_" + self._get_protocol())
-        response = handler(method, *args, **kwargs)
-        _logger.debug("%s: response: \n%s", self.display_name, response)
-        return response
+        with self._call_as_superuser() as record:
+            kwargs = record._call_prepare(**kwargs)
+            _logger.debug(
+                "%s: call %s %s %s",
+                record.display_name,
+                method,
+                args,
+                record._sanitize_kwargs_for_log(kwargs),
+            )
+            handler = getattr(record, "_handle_call_for_" + record._get_protocol())
+            response = handler(method, *args, **kwargs)
+            _logger.debug("%s: response: \n%s", record.display_name, response)
+            return response
 
     def _call_prepare(self, **kwargs):
         """Merge this record's own configured headers/querystring params into kwargs.
