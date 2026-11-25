@@ -197,6 +197,9 @@ class TestWebService(CommonWebService):
 
     @responses.activate
     def test_web_service_call_args(self):
+        self.env["ir.config_parameter"].sudo().set_param(
+            "webservice.allow_absolute_url", "True"
+        )
         url = "https://custom.url"
         responses.add(responses.POST, url, body="{}")
         result = self.webservice.call(
